@@ -1,0 +1,27 @@
+{
+  "source": "https://www.procore.com/ (screenshot captured 2026-10-24, cloud browser)",
+  "extractionMethod": "Agent visual inspection of the reference screenshot. Fuseini's Gemini style-extraction technique could not run: gemini.google.com is signed out in the browser profile and crossing a login wall is out of scope. Same JSON structure as his prompt produces.",
+  "colors": {
+    "background": "#ECE9E2 warm bone paper",
+    "surface": "#FBFAF7",
+    "ink": "#1B1917 near-black",
+    "muted": "#6D675D",
+    "accent": "#E8490F hi-vis safety orange",
+    "accentInk": "#FFFFFF",
+    "darkBand": "#17150F"
+  },
+  "typography": {
+    "display": "extra-bold condensed grotesque, -0.02em tracking, 1.05 leading",
+    "eyebrow": "11-12px uppercase, 0.18em letterspacing, muted",
+    "body": "15-16px/1.55 neutral sans",
+    "mono": "money, rates and reference labels set in monospace"
+  },
+  "composition": [
+    "slim header: wordmark left, actions right",
+    "eyebrow over a large condensed headline",
+    "flat cards with 1px hairline borders, 10-12px radius",
+    "generous vertical rhythm, one accent color per viewport"
+  ],
+  "effects": ["flat surfaces, no heavy shadows", "hairline ruled tables", "dashed borders for evidence/attachment zones"],
+  "adaptation": "Job-ticket identity: bone paper, near-black ink, hi-vis orange single accent, Barlow Semi Condensed display, IBM Plex Mono for money, ledger tables, dashed backup-documents card. Dark theme is warm charcoal, not blueprint blue."
+}

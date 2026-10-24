@@ -1,53 +1,135 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Changeslip: turn a signed T&M ticket into a change-order packet</title>
 <meta name="description" content="Type in a signed time-and-materials ticket, price it against your approved rate card and your GC's markup terms, and export a clean change-order packet PDF. Runs in your browser; files never leave your device.">
+<script>(function(){try{var t=localStorage.getItem('cs-theme');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;}catch(e){}})()</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#fbfaf8;--ink:#1c1a17;--mut:#6b665e;--line:#e4e0d8;--acc:#7a4a12;--bad:#b3261e;--warn:#9a6a00;--card:#fff}
-*{box-sizing:border-box}body{margin:0;font:15px/1.55 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-main{max-width:960px;margin:0 auto;padding:36px 20px 80px}
-h1{font-size:28px;line-height:1.2;margin:0 0 10px}h2{font-size:19px;margin:30px 0 8px}p{margin:8px 0}.mut{color:var(--mut)}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:12px 0}
-button,.btn{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer;text-decoration:none;display:inline-block}
-button:disabled{background:#b8a88f;cursor:default}.ghost{background:#fff;color:var(--acc);border:1px solid var(--acc)}
-.mini{padding:3px 8px;font-size:12px;background:#efe9df;color:var(--ink);border:1px solid var(--line)}
-input,select,textarea{padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:14px;margin:2px 4px 2px 0}
+:root{
+--bg:#ece9e2;--card:#fbfaf7;--ink:#1b1917;--mut:#6d675d;--line:#ddd8cb;--line2:#c9c3b3;
+--acc:#e8490f;--acc-ink:#fff;--acc-soft:#fbe4d8;
+--warn:#8f6200;--warn-bg:#fbf0d0;--bad:#b3261e;--bad-bg:#f9e7e4;--ok:#1f5c3d;--ok-bg:#e6f1ea;
+--band:#17150f;--band-ink:#f3efe6;--band-mut:#b9b09c;
+--mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+--disp:"Barlow Semi Condensed","Arial Narrow",-apple-system,sans-serif;
+--body:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+[data-theme="dark"]{
+--bg:#171510;--card:#221f18;--ink:#f0ece1;--mut:#a79e8b;--line:#373224;--line2:#4a4433;
+--acc:#ff6b35;--acc-ink:#20100a;--acc-soft:#3d2517;
+--warn:#e0b45f;--warn-bg:#38300f;--bad:#e5807a;--bad-bg:#3d201c;--ok:#8fcfa5;--ok-bg:#1a2f20;
+--band:#100e08;--band-ink:#f3efe6;--band-mut:#9c937e;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font:15px/1.55 var(--body);background:var(--bg);color:var(--ink);transition:background .15s ease,color .15s ease}
+::selection{background:var(--acc);color:var(--acc-ink)}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:1040px;margin:0 auto;padding:16px 20px}
+.brand{display:flex;align-items:baseline;gap:10px;text-decoration:none;color:var(--ink)}
+.brand .mark{font:700 22px/1 var(--disp);letter-spacing:.04em;text-transform:uppercase}
+.brand .mark i{font-style:normal;color:var(--acc)}
+.brand .tag{font:600 11px/1 var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+#themeBtn{background:none;border:1px solid var(--line2);color:var(--ink);border-radius:20px;padding:7px 14px;font:600 12px/1 var(--body);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+#themeBtn:hover{border-color:var(--acc);color:var(--acc)}
+#themeBtn svg{width:13px;height:13px;fill:currentColor}
+main{max-width:960px;margin:0 auto;padding:8px 20px 90px}
+.eyebrow{font:600 12px/1.4 var(--body);letter-spacing:.18em;text-transform:uppercase;color:var(--acc);margin:34px 0 10px}
+h1{font:700 44px/1.08 var(--disp);letter-spacing:-.01em;margin:0 0 14px;max-width:700px}
+.lede{font-size:17px;color:var(--mut);max-width:640px;margin:0 0 26px}
+h2{font:700 24px/1.15 var(--disp);letter-spacing:.01em;margin:44px 0 6px;display:flex;align-items:center;gap:12px}
+h2 .snum{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;border:1.5px solid var(--acc);color:var(--acc);border-radius:8px;font:700 17px/1 var(--mono)}
+p{margin:8px 0}.mut{color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin:14px 0}
+.card.truth{border-left:4px solid var(--acc)}
+.card.dashed{border-style:dashed;border-width:1.5px}
+button,.btn{background:var(--acc);color:var(--acc-ink);border:0;border-radius:8px;padding:10px 18px;font:600 14px/1 var(--body);letter-spacing:.02em;cursor:pointer;text-decoration:none;display:inline-block;transition:transform .12s ease,box-shadow .12s ease}
+button:hover,.btn:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(0,0,0,.14)}
+button:disabled{background:var(--line2);color:var(--mut);cursor:default;transform:none;box-shadow:none}
+.ghost{background:transparent;color:var(--acc);border:1.5px solid var(--acc)}
+.ghost:hover{box-shadow:none;background:var(--acc-soft)}
+.mini{padding:4px 10px;font-size:12px;background:transparent;color:var(--mut);border:1px solid var(--line2);border-radius:6px}
+.mini:hover{color:var(--bad);border-color:var(--bad);box-shadow:none;transform:none}
+input,select,textarea{padding:8px 10px;border:1px solid var(--line2);border-radius:8px;font:14px var(--body);margin:2px 4px 2px 0;background:var(--card);color:var(--ink);max-width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:1px;border-color:var(--acc)}
+input[type=checkbox]{accent-color:var(--acc)}
 label{font-size:13px;font-weight:600}
+button:focus-visible,.btn:focus-visible,a:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.tscroll{overflow-x:auto;margin:8px -4px;padding:0 4px}
 table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0}
-th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
-th{background:#f3f1ec}
-.err{color:var(--bad)}.warn{color:var(--warn)}.ok{color:#1f5c3d;font-weight:600}
-.pro{background:#3a2410;color:#f5ece0;border-radius:10px;padding:22px;margin-top:30px}
-.pro h2{color:#fff;margin-top:0}.pro .btn{background:#fff;color:#3a2410}
-.badge{display:inline-block;background:#f3e6d2;color:#7a4a12;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700;margin-left:8px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
-@media(max-width:700px){.grid{grid-template-columns:1fr}}
-</style></head><body><main>
+.tscroll table{min-width:600px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font:600 11px/1.3 var(--body);letter-spacing:.12em;text-transform:uppercase;color:var(--mut);border-bottom:1.5px solid var(--line2);background:none}
+td{font-family:var(--mono)}
+td input,td select{font-family:var(--body)}
+.err{color:var(--bad);background:var(--bad-bg);border-radius:6px;padding:2px 8px}
+.warn{color:var(--warn);background:var(--warn-bg);border-radius:6px;padding:2px 8px}
+.ok{color:var(--ok);background:var(--ok-bg);border-radius:6px;padding:2px 8px;font-weight:600}
+#sumBody td,#sumBody th{font-family:var(--mono)}
+.badge{display:inline-block;background:var(--acc-soft);color:var(--acc);border-radius:20px;padding:3px 12px;font:600 11px/1.4 var(--body);letter-spacing:.08em;text-transform:uppercase;margin-left:8px;vertical-align:middle}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 22px}
+.grid input{width:calc(100% - 6px)}
+.grid input[size="4"]{width:52px}
+.grid label label{display:inline;font-weight:400}
+.grid input[type=checkbox]{width:auto}
+.grid label{display:block;margin-top:8px}
+.pro{background:var(--band);color:var(--band-ink);border-radius:14px;padding:30px 28px;margin-top:44px}
+.pro h2{color:var(--band-ink);margin:0 0 8px;display:block}
+.pro .mut2{color:var(--band-mut)}
+.pro ul{padding-left:20px;margin:12px 0}
+.pro li{margin:6px 0}
+.pro .btn{background:var(--acc);color:#fff;margin-top:8px}
+.pro .fine{font-size:13px;color:var(--band-mut);margin-top:14px}
+footer{max-width:960px;margin:0 auto;padding:0 20px 60px}
+footer p{font-size:13px;color:var(--mut)}
+@media(prefers-reduced-motion:no-preference){
+.reveal{opacity:0;transform:translateY(12px);transition:opacity .35s ease,transform .35s ease}
+.reveal.in{opacity:1;transform:none}
+}
+@media(max-width:600px){.brand .tag{display:none}}
+@media(max-width:700px){
+h1{font-size:34px}
+h2{font-size:21px}
+.grid{grid-template-columns:1fr}
+.pro{padding:24px 20px}
+}
+</style></head><body>
+<header class="topbar">
+<a class="brand" href="#"><span class="mark">Change<i>slip</i></span><span class="tag">Change-order packets</span></a>
+<button id="themeBtn" aria-pressed="false" aria-label="Toggle dark mode"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 12.6V2.4a5.6 5.6 0 0 1 0 11.2z"/></svg><span id="themeLbl">Dark</span></button>
+</header>
+<main>
+<p class="eyebrow">Signed T&amp;M ticket &rarr; priced change order</p>
 <h1>Changeslip: turn a signed T&amp;M ticket into a change-order packet</h1>
-<p class="mut">You did the extra work and got the ticket signed. Changeslip turns it into a clean, priced change-order request your GC can sign off: ticket details, priced lines from your approved rate card, the GC's own markup terms, and a packet PDF listing your backup.</p>
-<div class="card">
+<p class="lede mut">You did the extra work and got the ticket signed. Changeslip turns it into a clean, priced change-order request your GC can sign off: ticket details, priced lines from your approved rate card, the GC's own markup terms, and a packet PDF listing your backup.</p>
+<div class="card truth">
 <p><b>What it does:</b> prices the lines you type against your rate card and markup terms, checks the evidence a GC expects (signed ticket, receipts, dates), and exports a packet PDF when a person approves the amounts.</p>
 <p><b>What it does not do:</b> read tickets from photos or PDFs (every line is typed and confirmed by a person), connect to Procore or any other service, upload anything, or decide what your contract allows. This free page keeps nothing when you close the tab.</p>
-<p style="margin-top:10px"><button class="ghost" id="sampleBtn">Load a sample ticket</button></p>
+<p style="margin-top:12px"><button class="ghost" id="sampleBtn">Load a sample ticket</button></p>
 </div>
 
-<h2>1. Your company and this GC's terms</h2>
+<section class="step">
+<h2><span class="snum" aria-hidden="true">1</span>Your company and this GC's terms</h2>
 <div class="card"><div class="grid">
 <div><label>Your company</label><br><input id="coName" size="24" placeholder="Test Electric"></div>
 <div><label>GC / client name</label><br><input id="gcName" size="24" placeholder="Riverside GC"></div>
 <div><label>Packet title</label><br><input id="packetTitle" size="24"></div>
 <div><label>Reference label</label><br><input id="refLabel" size="12"></div>
-<div><label>Markups % (labor / material / equipment)</label><br><input id="mkLabor" size="4"> <input id="mkMat" size="4"> <input id="mkEquip" size="4"></div>
-<div><label>Overhead &amp; profit %</label><br><input id="mkOhp" size="4"> <label style="font-weight:400"><input type="checkbox" id="compound"> compound on top of markups</label></div>
+<div><label>Markups % (labor / material / equipment)</label><br><input id="mkLabor" size="4" style="width:52px"> <input id="mkMat" size="4" style="width:52px"> <input id="mkEquip" size="4" style="width:52px"></div>
+<div><label>Overhead &amp; profit %</label><br><input id="mkOhp" size="4" style="width:52px"> <label style="font-weight:400"><input type="checkbox" id="compound"> compound on top of markups</label></div>
 </div>
-<label>Cover note (optional, printed on the packet)</label><br><textarea id="coverNote" rows="2" style="width:100%"></textarea>
+<label style="display:block;margin-top:10px">Cover note (optional, printed on the packet)</label><br><textarea id="coverNote" rows="2" style="width:100%"></textarea>
 </div>
-<h2>2. Approved rate card</h2>
+</section>
+<section class="step">
+<h2><span class="snum" aria-hidden="true">2</span>Approved rate card</h2>
 <div class="card">
 <p class="mut" style="font-size:13px;margin-top:0">Rates this GC has already agreed to. Labor lines priced from these show "approved rate card" on the packet; anything typed in by hand is flagged as such.</p>
-<table><tr><th>Type</th><th>Class code</th><th>ST rate</th><th>OT rate</th><th></th></tr><tbody id="rateRows"></tbody></table>
+<div class="tscroll"><table><tr><th>Type</th><th>Class code</th><th>ST rate</th><th>OT rate</th><th></th></tr><tbody id="rateRows"></tbody></table></div>
 <button class="ghost" id="addRate">+ rate</button>
 </div>
-<h2>3. The signed ticket</h2>
+</section>
+<section class="step">
+<h2><span class="snum" aria-hidden="true">3</span>The signed ticket</h2>
 <div class="card"><div class="grid">
 <div><label>Project</label><br><input id="projName" size="24"></div>
 <div><label>Job no.</label><br><input id="jobNo" size="12"></div>
@@ -56,20 +138,26 @@ th{background:#f3f1ec}
 <div><label>Work date</label><br><input id="tDate" type="date"></div>
 <div><label>Signed by (GC/owner rep)</label><br><input id="tSigned" size="20"></div>
 </div></div>
-<h2>4. Backup documents (names only)</h2>
-<div class="card">
+</section>
+<section class="step">
+<h2><span class="snum" aria-hidden="true">4</span>Backup documents (names only)</h2>
+<div class="card dashed">
 <p class="mut" style="font-size:13px;margin-top:0">Record what you hold: the signed ticket, receipts, quotes. File names only - nothing is uploaded, and the files are not embedded in the packet PDF.</p>
 <select id="docKind"><option value="signed_ticket">signed ticket</option><option value="receipt">receipt</option><option value="quote">quote</option><option value="invoice">invoice</option><option value="photo">photo</option><option value="other">other</option></select>
 <input id="docName" size="28" placeholder="filename or description"> <button class="ghost" id="addDoc">+ document</button>
-<table><tbody id="docRows"></tbody></table>
+<div class="tscroll"><table><tbody id="docRows"></tbody></table></div>
 </div>
-<h2>5. Line items</h2>
+</section>
+<section class="step">
+<h2><span class="snum" aria-hidden="true">5</span>Line items</h2>
 <div class="card">
 <select id="lineType"><option value="labor">labor</option><option value="material">material</option><option value="equipment">equipment</option></select>
 <button class="ghost" id="addLine">+ line</button>
-<table><tr><th>Type</th><th>Description</th><th>Qty / hours</th><th>Source doc</th><th style="text-align:right">Amount</th><th></th><th></th></tr><tbody id="lineRows"></tbody></table>
+<div class="tscroll"><table><tr><th>Type</th><th>Description</th><th>Qty / hours</th><th>Source doc</th><th style="text-align:right">Amount</th><th></th><th></th></tr><tbody id="lineRows"></tbody></table></div>
 </div>
-<h2>6. Pricing and approval</h2>
+</section>
+<section class="step">
+<h2><span class="snum" aria-hidden="true">6</span>Pricing and approval</h2>
 <div class="card">
 <table style="max-width:520px"><tbody id="sumBody"></tbody></table>
 <div id="flagsBox"></div>
@@ -77,23 +165,38 @@ th{background:#f3f1ec}
 <button id="approveBtn">Approve &amp; export packet PDF</button>
 <p class="mut" id="approveNote" style="font-size:13px"></p>
 </div>
+</section>
 <div class="pro">
 <h2>Changeslip Pro &middot; $29 one-time</h2>
-<p>The free page forgets everything when you close the tab. Pro is a single offline HTML file you keep on your own computer. It adds:</p>
+<p class="mut2">The free page forgets everything when you close the tab. Pro is a single offline HTML file you keep on your own computer. It adds:</p>
 <ul>
 <li>Saved setup - your company, GC terms and rate cards are still there when you reopen the file</li>
 <li>Saved tickets - pick up a half-finished change order tomorrow</li>
 <li>Change-order register - every approved packet logged, exportable to CSV and JSON for your records</li>
 </ul>
-<p>Same engine, same honesty: lines are typed and confirmed by a person, files never leave your device.</p>
+<p class="mut2">Same engine, same honesty: lines are typed and confirmed by a person, files never leave your device.</p>
 <p><a class="btn" href="https://buy.polar.sh/polar_cl_QbJOlZ9v0xWNxy806z4eR6XtZA6FP8EF2WHes1MwZA8">Buy Changeslip Pro - $29</a></p>
-<p style="font-size:13px;color:#d8c6ad">One-time purchase. After checkout you get a private download link. Questions: fuseini.metadata@gmail.com</p>
+<p class="fine">One-time purchase. After checkout you get a private download link. Questions: fuseini.metadata@gmail.com</p>
 </div>
-
-<p class="mut" style="font-size:13px;margin-top:30px">Changeslip prices from numbers you type or from your approved rate card. It does not read tickets from photos, connects to nothing, uploads nothing, and stores nothing on any server. It is not legal, contract, or accounting advice - a person confirms every line and approves every amount before anything goes out.</p>
 </main>
+<footer>
+<p>Changeslip prices from numbers you type or from your approved rate card. It does not read tickets from photos, connects to nothing, uploads nothing, and stores nothing on any server. It is not legal, contract, or accounting advice - a person confirms every line and approves every amount before anything goes out.</p>
+</footer>
 <script src="engine.js"></script>
 <script src="jspdf.umd.min.js"></script>
 <script src="app.js"></script>
-
+<script>
+(function(){
+var btn=document.getElementById('themeBtn'),lbl=document.getElementById('themeLbl');
+function paint(){var d=document.documentElement.dataset.theme==='dark';btn.setAttribute('aria-pressed',d);lbl.textContent=d?'Light':'Dark';}
+btn.addEventListener('click',function(){var t=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=t;try{localStorage.setItem('cs-theme',t);}catch(e){}paint();});
+paint();
+if(matchMedia('(prefers-reduced-motion: no-preference)').matches&&'IntersectionObserver' in window){
+var els=document.querySelectorAll('.step,.card,.pro');
+els.forEach(function(el){el.classList.add('reveal');});
+var io=new IntersectionObserver(function(en){en.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});},{rootMargin:'0px 0px -8% 0px'});
+els.forEach(function(el){io.observe(el);});
+}
+})();
+</script>
 </body></html>

@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "product": "Changeslip",
+  "categories": ["full-build","style","components","mobile","navigation","conversion","motion","illustration"],
+  "references": [
+    {"url": "https://styles.refero.design/", "purpose": "style-system scouting; chose condensed industrial sans + mono numerals discipline"},
+    {"url": "https://component.gallery/", "purpose": "ledger table and form control patterns"},
+    {"url": "https://cta.gallery/", "purpose": "single-accent CTA discipline"},
+    {"url": "https://navbar.gallery/", "purpose": "minimal product header with theme toggle"},
+    {"url": "https://footer.design/", "purpose": "honest-scope footer treatment"},
+    {"url": "https://ui.shadcn.com/", "purpose": "card and field anatomy adapted to CSS variables"},
+    {"url": "https://motion-primitives.com/", "purpose": "entry transition timing reference, implemented CSS-only"}
+  ],
+  "componentChoices": ["custom CSS-var design system (no runtime dependency)","Google Fonts: Barlow Semi Condensed + IBM Plex Mono","IntersectionObserver scroll-entry, prefers-reduced-motion honored","light/dark theme toggle persisted in localStorage"],
+  "reviewedAt": "2026-10-24"
+}
